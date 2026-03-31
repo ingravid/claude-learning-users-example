@@ -11,7 +11,7 @@ A Spring Boot REST application for managing users with CRUD operations, built wi
 - H2 in-memory database with console access
 - Java Records for immutable DTOs
 - RESTful API design
-- Comprehensive test coverage (37 tests)
+- Comprehensive test coverage (38 tests)
 
 ## Tech Stack
 
@@ -102,6 +102,7 @@ curl http://localhost:8080/api/users
 | GET | `/api/users/{id}` | Get user by ID | - | 200 OK |
 | PUT | `/api/users/{id}` | Update user | `{"name": "...", "email": "..."}` | 200 OK |
 | DELETE | `/api/users/{id}` | Delete user | - | 204 No Content |
+| GET | `/api/greetings` | Get greeting message | - | 200 OK |
 
 **Common Error Responses:**
 - `400 Bad Request` - Validation failed
@@ -234,6 +235,17 @@ Deletes a user by their ID.
 **Error Response:**
 - `404 Not Found` - User does not exist
 
+### Get Greeting
+
+**GET** `/api/greetings`
+
+Returns a simple greeting message.
+
+**Success Response:** `200 OK`
+```
+Hello user
+```
+
 ## Error Response Format
 
 All errors return a consistent JSON structure:
@@ -261,9 +273,10 @@ The H2 console is available for database inspection during development.
 
 The project has comprehensive test coverage across all layers:
 
-- **37 total tests**
+- **38 total tests**
 - Unit tests (UserServiceTest) - 14 tests
 - Integration tests (UserControllerIntegrationTest) - 10 tests
+- Integration tests (GreetingControllerIntegrationTest) - 1 test
 - Repository tests (UserRepositoryTest) - 7 tests
 - Exception handler tests (GlobalExceptionHandlerTest) - 5 tests
 - Application context test - 1 test
@@ -334,6 +347,9 @@ curl -X PUT http://localhost:8080/api/users/999 \
 
 # Try to delete non-existent user
 curl -X DELETE http://localhost:8080/api/users/999
+
+# Get greeting message
+curl http://localhost:8080/api/greetings
 ```
 
 ## Design Decisions
