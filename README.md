@@ -8,6 +8,7 @@ A Spring Boot REST application for managing users with CRUD operations, built wi
 - Get all users with pagination support
 - Input validation with Bean Validation
 - Global exception handling with consistent error responses
+- Interactive OpenAPI/Swagger documentation
 - H2 in-memory database with console access
 - Java Records for immutable DTOs
 - RESTful API design
@@ -109,6 +110,21 @@ curl http://localhost:8080/api/users
 - `404 Not Found` - User does not exist
 - `409 Conflict` - Email already exists
 - `500 Internal Server Error` - Server error
+
+## Interactive API Documentation
+
+This project includes interactive API documentation powered by OpenAPI/Swagger.
+
+**Access Swagger UI**: http://localhost:8080/swagger-ui.html
+
+**OpenAPI JSON**: http://localhost:8080/v3/api-docs
+
+The Swagger UI provides:
+- Complete API endpoint documentation
+- Request/response schemas with example values
+- Try-it-out functionality for testing endpoints directly
+- All HTTP status codes documented for each endpoint
+- Interactive testing without external tools like curl or Postman
 
 ## API Endpoints
 
