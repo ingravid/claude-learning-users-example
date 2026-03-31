@@ -379,6 +379,205 @@ curl http://localhost:8080/api/greetings
 - **Test-Driven Development**: All features implemented using TDD methodology (Red-Green-Refactor)
 - **Transactional Updates**: Update and delete operations use `@Transactional` for data consistency
 
+## 🎯 Project Roadmap & TODO List
+
+This section tracks planned improvements and features for this AI-assisted learning project. The format combines Emacs org-mode headers with Markdown for clear status tracking.
+
+### ***** DONE 1. Testing (Critical Gap)
+
+Currently comprehensive tests are implemented:
+
+**Unit Tests:**
+- ✅ UserServiceTest - Mocks repository, tests business logic:
+  - Creating users with valid data
+  - Duplicate email detection
+  - User not found scenarios
+- ✅ UserRepositoryTest - Tests Spring Data JPA queries:
+  - existsByEmail() behavior
+  - findByEmail() optional handling
+  - Unique constraint violations
+
+**Integration Tests:**
+- ✅ UserControllerIntegrationTest - Uses @SpringBootTest + MockMvc:
+  - Full request/response cycle testing
+  - All HTTP status codes (201, 200, 400, 404, 409)
+  - JSON serialization/deserialization
+  - Validation error message format
+
+**Test Coverage:** 38 tests across all layers
+
+---
+
+### ***** TODO 2. Security (Currently None)
+
+The API is completely open. Consider:
+
+**Spring Security with JWT:**
+- Bearer token authentication
+- User roles (ADMIN, USER)
+- Endpoint authorization (e.g., only admins can create users)
+- Password hashing (BCrypt)
+- Add User.password field with proper storage
+
+**Security Configuration:**
+- POST /api/auth/login - Generate JWT
+- POST /api/auth/register - Create account
+- Protect /api/users/** with @PreAuthorize
+
+---
+
+### ***** DONE 3. API Completeness
+
+**Completed CRUD Operations:**
+- ✅ POST /api/users - Create user
+- ✅ GET /api/users/{id} - Get user by ID
+- ✅ PUT /api/users/{id} - Update user
+- ✅ DELETE /api/users/{id} - Delete user
+- ✅ GET /api/users - List all users with pagination
+
+**Future Enhancements:**
+- [ ] GET /api/users?email={email} - Search by email
+- [ ] Advanced filtering and sorting options
+
+---
+
+### ***** TODO 4. Data Validation Enhancement
+
+Current validation is basic:
+
+**Improvements:**
+- Email format validation beyond @Email (domain whitelist?)
+- Name length constraints (@Size(min=2, max=100))
+- Custom validators for business rules
+- Sanitization to prevent XSS
+
+---
+
+### ***** DONE 5. API Documentation
+
+**Completed:**
+- ✅ Added springdoc-openapi-starter-webmvc-ui dependency
+- ✅ Annotated controllers with @Operation, @ApiResponse
+- ✅ Auto-generated interactive API docs at /swagger-ui.html
+- ✅ All endpoints documented with examples and schemas
+- ✅ OpenAPI 3.0 JSON spec available at /v3/api-docs
+
+---
+
+### ***** TODO 6. Observability & Monitoring
+
+No logging or metrics currently:
+
+**Spring Boot Actuator:**
+- Health checks (/actuator/health)
+- Metrics (/actuator/metrics)
+- Structured logging (SLF4J with proper levels)
+- Request/response logging interceptor
+- Correlation IDs for tracing
+
+---
+
+### ***** TODO 7. Database Improvements
+
+**Migration from H2:**
+- PostgreSQL or MySQL for production
+- Flyway or Liquibase for schema versioning
+- Database migration scripts in src/main/resources/db/migration/
+
+**Entity Enhancements:**
+- Audit fields (createdAt, updatedAt, createdBy)
+- Use @CreationTimestamp and @UpdateTimestamp
+- Soft delete with deletedAt field
+
+---
+
+### ***** TODO 8. Error Handling Refinement
+
+**Current Issues:**
+- Generic 500 errors expose no details
+- Limited request validation error details
+
+**Improvements:**
+- Return field-level validation errors (map of field → error)
+- Add error codes for client handling
+- Internationalization (i18n) for error messages
+- Custom error response with ErrorResponse enhancement
+
+---
+
+### ***** TODO 9. Configuration Management
+
+**Profiles:**
+- application-dev.yml - Development settings
+- application-prod.yml - Production settings
+- application-test.yml - Test settings
+- Externalize sensitive config (database credentials)
+
+---
+
+### ***** TODO 10. Performance & Scalability
+
+**Caching:**
+- Add @Cacheable on getUserById()
+- Redis or Caffeine cache
+- Cache eviction on updates
+
+**Connection Pooling:**
+- HikariCP configuration tuning
+- Connection pool sizing
+
+**Pagination:**
+- ✅ Already implemented Page<UserResponseDto> for list endpoints
+- [ ] Implement advanced sorting and filtering
+
+---
+
+### ***** TODO 11. Code Quality Tools
+
+**Static Analysis:**
+- Checkstyle for code style
+- SpotBugs for bug detection
+- SonarQube integration
+- JaCoCo for test coverage reporting
+
+---
+
+### ***** TODO 12. Docker & Deployment
+
+**Containerization:**
+- Dockerfile for application
+- docker-compose.yml with PostgreSQL
+- Multi-stage builds for smaller images
+- Health check configuration
+
+---
+
+### ***** TODO 13. API Versioning
+
+**Future-proof the API:**
+- URL versioning: /api/v1/users
+- Header versioning: Accept: application/vnd.api.v1+json
+
+---
+
+### ***** TODO 14. Rate Limiting
+
+**Prevent abuse:**
+- Bucket4j or Resilience4j
+- Per-user or per-IP limits
+- Return 429 Too Many Requests
+
+---
+
+### ***** TODO 15. CORS Configuration
+
+**For frontend integration:**
+- Configure allowed origins
+- Allowed methods and headers
+- Credentials support
+
+---
+
 ## License
 
 This is a learning project for educational purposes.
