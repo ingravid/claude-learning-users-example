@@ -2,6 +2,33 @@
 
 A Spring Boot REST application for managing users with CRUD operations, built with Java 21 and H2 in-memory database.
 
+## Table of Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Project Structure](#project-structure)
+- [Building the Project](#building-the-project)
+- [Running the Application](#running-the-application)
+- [Quick Start](#quick-start)
+- [API Summary](#api-summary)
+- [Interactive API Documentation](#interactive-api-documentation)
+- [API Endpoints](#api-endpoints)
+  - [Register](#register)
+  - [Login](#login)
+  - [Get All Users](#get-all-users)
+  - [Create User](#create-user)
+  - [Get User by ID](#get-user-by-id)
+  - [Update User](#update-user)
+  - [Delete User](#delete-user)
+  - [Get Greeting](#get-greeting)
+- [Error Response Format](#error-response-format)
+- [H2 Database Console](#h2-database-console)
+- [Testing](#testing)
+- [Example Usage with curl](#example-usage-with-curl)
+- [Design Decisions](#design-decisions)
+- [Project Roadmap & TODO List](#-project-roadmap--todo-list)
+
 ## Features
 
 - Complete CRUD operations (Create, Read, Update, Delete)
