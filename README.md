@@ -22,6 +22,7 @@ A Spring Boot REST application for managing users with CRUD operations, built wi
 - **Database**: H2 (in-memory)
 - **ORM**: Spring Data JPA
 - **Validation**: Jakarta Bean Validation
+- **Security**: Spring Security + JWT (jjwt 0.12.6)
 
 ## Prerequisites
 
@@ -98,6 +99,8 @@ curl http://localhost:8080/api/users
 
 | Method | Endpoint | Description | Request Body | Success Response |
 |--------|----------|-------------|--------------|------------------|
+| POST | `/api/auth/register` | Register a new account | `{"name": "...", "email": "...", "password": "..."}` | 201 Created |
+| POST | `/api/auth/login` | Login and receive JWT | `{"email": "...", "password": "..."}` | 200 OK |
 | GET | `/api/users` | Get all users (paginated) | - | 200 OK |
 | POST | `/api/users` | Create a new user | `{"name": "...", "email": "..."}` | 201 Created |
 | GET | `/api/users/{id}` | Get user by ID | - | 200 OK |
@@ -107,6 +110,7 @@ curl http://localhost:8080/api/users
 
 **Common Error Responses:**
 - `400 Bad Request` - Validation failed
+- `401 Unauthorized` - Invalid credentials
 - `404 Not Found` - User does not exist
 - `409 Conflict` - Email already exists
 - `500 Internal Server Error` - Server error
@@ -127,6 +131,61 @@ The Swagger UI provides:
 - Interactive testing without external tools like curl or Postman
 
 ## API Endpoints
+
+### Register
+
+**POST** `/api/auth/register`
+
+Creates a new account and returns a JWT token.
+
+**Request Body:**
+```json
+{
+  "name": "Alice",
+  "email": "alice@example.com",
+  "password": "secret123"
+}
+```
+
+**Success Response:** `201 Created`
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+**Error Responses:**
+- `400 Bad Request` - Validation failed (blank fields or invalid email)
+- `409 Conflict` - Email already in use
+
+---
+
+### Login
+
+**POST** `/api/auth/login`
+
+Authenticates a user and returns a JWT token.
+
+**Request Body:**
+```json
+{
+  "email": "alice@example.com",
+  "password": "secret123"
+}
+```
+
+**Success Response:** `200 OK`
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+**Error Responses:**
+- `400 Bad Request` - Validation failed
+- `401 Unauthorized` - Invalid email or password
+
+---
 
 ### Get All Users
 
@@ -314,6 +373,21 @@ The project has comprehensive test coverage across all layers:
 ## Example Usage with curl
 
 ```bash
+# Register a new account
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Alice", "email": "alice@example.com", "password": "secret123"}'
+
+# Login and receive a JWT token
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "alice@example.com", "password": "secret123"}'
+
+# Login with wrong password (returns 401)
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "alice@example.com", "password": "wrong"}'
+
 # Get all users (with pagination)
 curl "http://localhost:8080/api/users?page=0&size=10"
 
@@ -408,21 +482,20 @@ Currently comprehensive tests are implemented:
 
 ---
 
-### ***** TODO 2. Security (Currently None)
-
-The API is completely open. Consider:
+### ***** IN-PROGRESS 2. Security
 
 **Spring Security with JWT:**
-- Bearer token authentication
-- User roles (ADMIN, USER)
-- Endpoint authorization (e.g., only admins can create users)
-- Password hashing (BCrypt)
-- Add User.password field with proper storage
+- ✅ Bearer token generation (HS256, jjwt 0.12.6)
+- ✅ Password hashing (BCrypt)
+- ✅ User.password field added to entity
+- [ ] JWT validation on incoming requests
+- [ ] User roles (ADMIN, USER)
+- [ ] Endpoint authorization (e.g., only admins can create users)
 
 **Security Configuration:**
-- POST /api/auth/login - Generate JWT
-- POST /api/auth/register - Create account
-- Protect /api/users/** with @PreAuthorize
+- ✅ POST /api/auth/login - Generate JWT
+- ✅ POST /api/auth/register - Create account
+- [ ] Protect /api/users/** with @PreAuthorize
 
 ---
 
