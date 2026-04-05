@@ -21,7 +21,7 @@ class UserRepositoryTest {
     @Test
     void testSaveUser() {
         // given
-        User user = new User(null, "Jane Doe", "jane@example.com");
+        User user = new User(null, "Jane Doe", "jane@example.com", "hashed");
 
         // when
         User savedUser = userRepository.save(user);
@@ -35,7 +35,7 @@ class UserRepositoryTest {
     @Test
     void testFindById_UserExists() {
         // given
-        User user = new User(null, "Test User", "test@example.com");
+        User user = new User(null, "Test User", "test@example.com", "hashed");
         User savedUser = userRepository.save(user);
 
         // when
@@ -59,7 +59,7 @@ class UserRepositoryTest {
     @Test
     void testExistsByEmail_EmailExists() {
         // given
-        User user = new User(null, "Test User", "exists@example.com");
+        User user = new User(null, "Test User", "exists@example.com", "hashed");
         userRepository.save(user);
 
         // when
@@ -81,7 +81,7 @@ class UserRepositoryTest {
     @Test
     void testFindByEmail_UserExists() {
         // given
-        User user = new User(null, "Email Test User", "emailtest@example.com");
+        User user = new User(null, "Email Test User", "emailtest@example.com", "hashed");
         userRepository.save(user);
 
         // when
@@ -96,10 +96,10 @@ class UserRepositoryTest {
     @Test
     void testEmailUniqueConstraint() {
         // given
-        User user1 = new User(null, "User One", "unique@example.com");
+        User user1 = new User(null, "User One", "unique@example.com", "hashed");
         userRepository.save(user1);
 
-        User user2 = new User(null, "User Two", "unique@example.com");
+        User user2 = new User(null, "User Two", "unique@example.com", "hashed");
 
         // when & then
         assertThrows(DataIntegrityViolationException.class, () -> {

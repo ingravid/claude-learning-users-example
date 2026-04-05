@@ -111,7 +111,7 @@ class UserControllerIntegrationTest {
     @Test
     void testCreateUser_DuplicateEmail_Returns409() throws Exception {
         // given - create first user
-        User existingUser = new User(null, "Existing User", "duplicate@example.com");
+        User existingUser = new User(null, "Existing User", "duplicate@example.com", "hashed");
         userRepository.save(existingUser);
 
         String requestBody = """
@@ -133,7 +133,7 @@ class UserControllerIntegrationTest {
     @Test
     void testGetUserById_Success_Returns200() throws Exception {
         // given
-        User user = new User(null, "Jane Doe", "jane@example.com");
+        User user = new User(null, "Jane Doe", "jane@example.com", "hashed");
         User savedUser = userRepository.save(user);
 
         // when & then
@@ -179,7 +179,7 @@ class UserControllerIntegrationTest {
     @Test
     void testGetUserById_ResponseBodyCorrect() throws Exception {
         // given
-        User user = new User(null, "Bob Brown", "bob@example.com");
+        User user = new User(null, "Bob Brown", "bob@example.com", "hashed");
         User savedUser = userRepository.save(user);
 
         // when & then

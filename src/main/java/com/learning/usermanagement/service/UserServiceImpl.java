@@ -29,7 +29,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // Create and save user entity
-        User user = new User(null, request.name(), request.email());
+        User user = new User(null, request.name(), request.email(), "");
         User savedUser = userRepository.save(user);
 
         // Convert to response DTO
