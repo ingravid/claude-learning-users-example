@@ -35,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponseDto login(LoginRequestDto request) {
+    public AuthResponseDto authenticate(LoginRequestDto request) {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
