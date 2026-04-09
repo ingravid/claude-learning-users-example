@@ -1,5 +1,6 @@
 package com.learning.usermanagement.controller;
 
+import com.learning.usermanagement.model.Role;
 import com.learning.usermanagement.model.User;
 import com.learning.usermanagement.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -113,7 +114,7 @@ class UserControllerIntegrationTest {
     @Test
     void testCreateUser_DuplicateEmail_Returns409() throws Exception {
         // given - create first user
-        User existingUser = new User(null, "Existing User", "duplicate@example.com", "hashed");
+        User existingUser = new User(null, "Existing User", "duplicate@example.com", "hashed", Role.USER);
         userRepository.save(existingUser);
 
         String requestBody = """
@@ -135,7 +136,7 @@ class UserControllerIntegrationTest {
     @Test
     void testGetUserById_Success_Returns200() throws Exception {
         // given
-        User user = new User(null, "Jane Doe", "jane@example.com", "hashed");
+        User user = new User(null, "Jane Doe", "jane@example.com", "hashed", Role.USER);
         User savedUser = userRepository.save(user);
 
         // when & then
@@ -181,7 +182,7 @@ class UserControllerIntegrationTest {
     @Test
     void testGetUserById_ResponseBodyCorrect() throws Exception {
         // given
-        User user = new User(null, "Bob Brown", "bob@example.com", "hashed");
+        User user = new User(null, "Bob Brown", "bob@example.com", "hashed", Role.USER);
         User savedUser = userRepository.save(user);
 
         // when & then

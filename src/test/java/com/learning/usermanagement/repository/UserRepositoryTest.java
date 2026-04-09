@@ -1,5 +1,6 @@
 package com.learning.usermanagement.repository;
 
+import com.learning.usermanagement.model.Role;
 import com.learning.usermanagement.model.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +22,7 @@ class UserRepositoryTest {
     @Test
     void testSaveUser() {
         // given
-        User user = new User(null, "Jane Doe", "jane@example.com", "hashed");
+        User user = new User(null, "Jane Doe", "jane@example.com", "hashed", Role.USER);
 
         // when
         User savedUser = userRepository.save(user);
@@ -35,7 +36,7 @@ class UserRepositoryTest {
     @Test
     void testFindById_UserExists() {
         // given
-        User user = new User(null, "Test User", "test@example.com", "hashed");
+        User user = new User(null, "Test User", "test@example.com", "hashed", Role.USER);
         User savedUser = userRepository.save(user);
 
         // when
@@ -59,7 +60,7 @@ class UserRepositoryTest {
     @Test
     void testExistsByEmail_EmailExists() {
         // given
-        User user = new User(null, "Test User", "exists@example.com", "hashed");
+        User user = new User(null, "Test User", "exists@example.com", "hashed", Role.USER);
         userRepository.save(user);
 
         // when
@@ -81,7 +82,7 @@ class UserRepositoryTest {
     @Test
     void testFindByEmail_UserExists() {
         // given
-        User user = new User(null, "Email Test User", "emailtest@example.com", "hashed");
+        User user = new User(null, "Email Test User", "emailtest@example.com", "hashed", Role.USER);
         userRepository.save(user);
 
         // when
@@ -96,10 +97,10 @@ class UserRepositoryTest {
     @Test
     void testEmailUniqueConstraint() {
         // given
-        User user1 = new User(null, "User One", "unique@example.com", "hashed");
+        User user1 = new User(null, "User One", "unique@example.com", "hashed", Role.USER);
         userRepository.save(user1);
 
-        User user2 = new User(null, "User Two", "unique@example.com", "hashed");
+        User user2 = new User(null, "User Two", "unique@example.com", "hashed", Role.USER);
 
         // when & then
         assertThrows(DataIntegrityViolationException.class, () -> {

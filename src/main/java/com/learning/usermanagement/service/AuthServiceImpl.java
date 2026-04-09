@@ -4,6 +4,7 @@ import com.learning.usermanagement.dto.AuthResponseDto;
 import com.learning.usermanagement.dto.LoginRequestDto;
 import com.learning.usermanagement.dto.RegisterRequestDto;
 import com.learning.usermanagement.exception.DuplicateEmailException;
+import com.learning.usermanagement.model.Role;
 import com.learning.usermanagement.model.User;
 import com.learning.usermanagement.repository.UserRepository;
 import com.learning.usermanagement.security.JwtService;
@@ -29,7 +30,7 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateEmailException("Email already in use: " + request.email());
         }
-        User user = new User(null, request.name(), request.email(), passwordEncoder.encode(request.password()));
+        User user = new User(null, request.name(), request.email(), passwordEncoder.encode(request.password()), Role.USER);
         userRepository.save(user);
         return new AuthResponseDto(jwtService.generateToken(user.getEmail()));
     }

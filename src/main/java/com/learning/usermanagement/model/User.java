@@ -19,23 +19,28 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
     // No-arg constructor for JPA
     public User() {
     }
 
-    // Constructor for user-management flow (no password)
+    // Constructor for user-management flow (no password, no role)
     public User(Long id, String name, String email) {
         this.id = id;
         this.name = name;
         this.email = email;
     }
 
-    // Constructor for auth flow (with password)
-    public User(Long id, String name, String email, String password) {
+    // Constructor for auth flow (with password and role)
+    public User(Long id, String name, String email, String password, Role role) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.password = password;
+        this.role = role;
     }
 
     // Getters and setters
@@ -69,5 +74,13 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }
