@@ -459,13 +459,13 @@ curl -X PUT http://localhost:8080/api/users/2 \
   -d '{"name": "Jane Updated", "email": "jane.updated@example.com"}'
 
 # Update user name only (keep same email) — requires auth
-curl -X PUT http://localhost:8080/api/users/1 \
+curl -X PUT http://localhost:8080/api/users/2 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "Jane Smith", "email": "jane@example.com"}'
 
 # Delete a user — requires auth
-curl -X DELETE http://localhost:8080/api/users/1 \
+curl -X DELETE http://localhost:8080/api/users/2 \
   -H "Authorization: Bearer $TOKEN"
 
 # Error examples:
