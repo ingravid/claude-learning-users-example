@@ -453,7 +453,7 @@ curl http://localhost:8080/api/users/1 \
   -H "Authorization: Bearer $TOKEN"
 
 # Update a user — requires auth
-curl -X PUT http://localhost:8080/api/users/1 \
+curl -X PUT http://localhost:8080/api/users/2 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "Jane Updated", "email": "jane.updated@example.com"}'
