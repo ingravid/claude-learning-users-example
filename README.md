@@ -33,6 +33,8 @@ A Spring Boot REST application for managing users with CRUD operations, built wi
 
 - Complete CRUD operations (Create, Read, Update, Delete)
 - Get all users with pagination support
+- JWT authentication (HS256, 24-hour expiry) with register/login endpoints
+- Password hashing with BCrypt
 - Input validation with Bean Validation
 - Global exception handling with consistent error responses
 - Interactive OpenAPI/Swagger documentation
@@ -61,10 +63,12 @@ A Spring Boot REST application for managing users with CRUD operations, built wi
 ```
 src/main/java/com/learning/usermanagement/
 ├── UserManagementApplication.java    # Main application class
+├── config/                            # Spring configuration (Security, OpenAPI)
 ├── controller/                        # REST API endpoints
 ├── service/                           # Business logic layer
+├── security/                          # JWT filter, entry point, UserDetailsService
 ├── repository/                        # Data access layer
-├── model/                             # JPA entities
+├── model/                             # JPA entities and enums
 ├── dto/                               # Data Transfer Objects (Records)
 └── exception/                         # Custom exceptions and handlers
 ```
@@ -107,13 +111,25 @@ cd prompting_to_project
 ./mvnw spring-boot:run
 
 # 4. Test the API (in a new terminal)
+
+# Register an account and receive a JWT token
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Alice", "email": "alice@example.com", "password": "secret123"}'
+# Response: {"token": "eyJhbGci..."}
+
+# Use the token to call protected endpoints
+TOKEN="<paste token here>"
+
 # Create a user
 curl -X POST http://localhost:8080/api/users \
   -H "Content-Type: application/json" \
-  -d '{"name": "Alice", "email": "alice@example.com"}'
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"name": "Bob", "email": "bob@example.com"}'
 
 # Get all users
-curl http://localhost:8080/api/users
+curl http://localhost:8080/api/users \
+  -H "Authorization: Bearer $TOKEN"
 
 # Access H2 console
 # Open browser: http://localhost:8080/h2-console
@@ -415,57 +431,75 @@ curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "alice@example.com", "password": "wrong"}'
 
-# Get all users (with pagination)
-curl "http://localhost:8080/api/users?page=0&size=10"
+# Store the token for subsequent requests
+TOKEN="eyJhbGciOiJIUzI1NiJ9..."   # paste token from register/login response
 
-# Get all users (default pagination)
-curl http://localhost:8080/api/users
+# Get all users (with pagination) — requires auth
+curl "http://localhost:8080/api/users?page=0&size=10" \
+  -H "Authorization: Bearer $TOKEN"
 
-# Create a user
+# Get all users (default pagination) — requires auth
+curl http://localhost:8080/api/users \
+  -H "Authorization: Bearer $TOKEN"
+
+# Create a user — requires auth
 curl -X POST http://localhost:8080/api/users \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "Jane Doe", "email": "jane@example.com"}'
 
-# Get a user by ID
-curl http://localhost:8080/api/users/1
+# Get a user by ID — requires auth
+curl http://localhost:8080/api/users/1 \
+  -H "Authorization: Bearer $TOKEN"
 
-# Update a user
+# Update a user — requires auth
 curl -X PUT http://localhost:8080/api/users/1 \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "Jane Updated", "email": "jane.updated@example.com"}'
 
-# Update user name only (keep same email)
+# Update user name only (keep same email) — requires auth
 curl -X PUT http://localhost:8080/api/users/1 \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "Jane Smith", "email": "jane@example.com"}'
 
-# Delete a user
-curl -X DELETE http://localhost:8080/api/users/1
+# Delete a user — requires auth
+curl -X DELETE http://localhost:8080/api/users/1 \
+  -H "Authorization: Bearer $TOKEN"
 
 # Error examples:
+
+# Access protected endpoint without token (returns 401)
+curl http://localhost:8080/api/users
 
 # Create a user with validation error
 curl -X POST http://localhost:8080/api/users \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "", "email": "invalid"}'
 
 # Create a user with duplicate email
 curl -X POST http://localhost:8080/api/users \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "John Smith", "email": "jane@example.com"}'
 
 # Try to get non-existent user
-curl http://localhost:8080/api/users/999
+curl http://localhost:8080/api/users/999 \
+  -H "Authorization: Bearer $TOKEN"
 
 # Try to update non-existent user
 curl -X PUT http://localhost:8080/api/users/999 \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "Ghost", "email": "ghost@example.com"}'
 
 # Try to delete non-existent user
-curl -X DELETE http://localhost:8080/api/users/999
+curl -X DELETE http://localhost:8080/api/users/999 \
+  -H "Authorization: Bearer $TOKEN"
 
-# Get greeting message
+# Get greeting message (public — no auth needed)
 curl http://localhost:8080/api/greetings
 ```
 
@@ -515,14 +549,15 @@ Currently comprehensive tests are implemented:
 - ✅ Bearer token generation (HS256, jjwt 0.12.6)
 - ✅ Password hashing (BCrypt)
 - ✅ User.password field added to entity
-- [ ] JWT validation on incoming requests
-- [ ] User roles (ADMIN, USER)
-- [ ] Endpoint authorization (e.g., only admins can create users)
+- ✅ JWT validation on incoming requests (JwtAuthenticationFilter)
+- ✅ User roles (ADMIN, USER) — Role enum, stored in DB
+- ✅ Endpoint protection: all /api/users/** require valid JWT
 
 **Security Configuration:**
 - ✅ POST /api/auth/login - Generate JWT
 - ✅ POST /api/auth/register - Create account
-- [ ] Protect /api/users/** with @PreAuthorize
+- ✅ /api/users/** protected by JwtAuthenticationFilter
+- [ ] Role-based authorization with @PreAuthorize (e.g., only ADMIN can create/delete users)
 
 ---
 
