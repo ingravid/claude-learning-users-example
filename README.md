@@ -41,7 +41,7 @@ A Spring Boot REST application for managing users with CRUD operations, built wi
 - H2 in-memory database with console access
 - Java Records for immutable DTOs
 - RESTful API design
-- Comprehensive test coverage (38 tests)
+- Comprehensive test coverage (42 tests)
 
 ## Tech Stack
 
@@ -395,12 +395,12 @@ The H2 console is available for database inspection during development.
 
 The project has comprehensive test coverage across all layers:
 
-- **38 total tests**
+- **42 total tests**
 - Unit tests (UserServiceTest) - 14 tests
-- Integration tests (UserControllerIntegrationTest) - 10 tests
+- Integration tests (UserControllerIntegrationTest) - 13 tests
 - Integration tests (GreetingControllerIntegrationTest) - 1 test
 - Repository tests (UserRepositoryTest) - 7 tests
-- Exception handler tests (GlobalExceptionHandlerTest) - 5 tests
+- Exception handler tests (GlobalExceptionHandlerTest) - 6 tests
 - Application context test - 1 test
 
 ```bash
