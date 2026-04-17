@@ -1,13 +1,14 @@
 package com.learning.usermanagement.security;
 
 import com.learning.usermanagement.repository.UserRepository;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
+import java.util.List;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
@@ -23,6 +24,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         com.learning.usermanagement.model.User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        return new User(user.getEmail(), user.getPassword(), Collections.emptyList());
+        return new User(
+                user.getEmail(),
+                user.getPassword(),
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+        );
     }
 }
