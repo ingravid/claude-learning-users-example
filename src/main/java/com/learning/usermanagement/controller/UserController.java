@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,15 +46,17 @@ public class UserController {
 
     @Operation(
             summary = "Create user",
-            description = "Create a new user with name and email"
+            description = "Create a new user with name and email. Requires ADMIN role."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input - validation failed"),
+            @ApiResponse(responseCode = "403", description = "Access denied — ADMIN role required"),
             @ApiResponse(responseCode = "409", description = "Email already exists")
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponseDto createUser(@Valid @RequestBody UserRequestDto request) {
         return userService.createUser(request);
     }
@@ -75,15 +78,17 @@ public class UserController {
 
     @Operation(
             summary = "Update user",
-            description = "Update an existing user's information"
+            description = "Update an existing user's information. Requires ADMIN role."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User updated successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input"),
+            @ApiResponse(responseCode = "403", description = "Access denied — ADMIN role required"),
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "409", description = "Email already exists")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponseDto updateUser(
             @Parameter(description = "User ID", example = "1")
             @PathVariable Long id,
@@ -93,14 +98,16 @@ public class UserController {
 
     @Operation(
             summary = "Delete user",
-            description = "Delete a user by their ID"
+            description = "Delete a user by their ID. Requires ADMIN role."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "User deleted successfully"),
+            @ApiResponse(responseCode = "403", description = "Access denied — ADMIN role required"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(
             @Parameter(description = "User ID", example = "1")
             @PathVariable Long id) {

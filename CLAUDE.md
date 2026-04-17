@@ -79,6 +79,7 @@ The application starts on port 8080. H2 console is available at `http://localhos
 - ✅ `UserRepositoryTest` - Repository integration tests (@DataJpaTest)
 - ✅ `GlobalExceptionHandlerTest` - Exception handler unit tests
 - ✅ `UserControllerIntegrationTest` - REST API integration tests (MockMvc)
+- ✅ `GreetingControllerIntegrationTest` - Greeting endpoint integration test (MockMvc)
 - ✅ `UserManagementApplicationTests` - Context load test
 
 ## Architecture Overview
@@ -92,6 +93,9 @@ This is a Spring Boot 3.2.5 REST API using **Java 21** with a layered architectu
 1. **Java Records for DTOs**: This project uses Java 21 Records (not Lombok) for all DTOs:
    - `UserRequestDto` - Request validation with `@NotBlank` and `@Email` on record components
    - `UserResponseDto` - Immutable response objects
+   - `RegisterRequestDto` - Registration payload (name, email, password)
+   - `LoginRequestDto` - Login payload (email, password)
+   - `AuthResponseDto` - JWT token wrapper returned after auth
    - `ErrorResponse` - Consistent error format across all endpoints
 
 2. **JPA Entities**: Regular classes (not Records) are used for JPA entities because JPA requires:
@@ -105,9 +109,18 @@ This is a Spring Boot 3.2.5 REST API using **Java 21** with a layered architectu
    - `UserNotFoundException` → 404
    - `DuplicateEmailException` → 409
    - `MethodArgumentNotValidException` → 400
+   - `BadCredentialsException` → 401
    - Generic `Exception` → 500
 
-5. **Testing Strategy**: Comprehensive test coverage across all layers:
+5. **JWT Security**: Stateless Bearer-token authentication using HS256 (jjwt 0.12.6):
+   - `JwtService`/`JwtServiceImpl` - token generation and validation (interface + impl pattern)
+   - `JwtAuthenticationFilter` - extracts and validates Bearer tokens on every request
+   - `JwtAuthenticationEntryPoint` - returns JSON 401 for unauthenticated requests
+   - `UserDetailsServiceImpl` - loads `UserDetails` by email for Spring Security
+   - Public routes: `/api/auth/**`, `/api/greetings`, `/h2-console/**`, Swagger UI
+   - Protected routes: all `/api/users/**` endpoints require a valid JWT
+
+6. **Testing Strategy**: Comprehensive test coverage across all layers:
    - Unit tests with Mockito for service layer
    - @DataJpaTest for repository layer
    - @SpringBootTest + MockMvc for controller integration tests
@@ -115,10 +128,12 @@ This is a Spring Boot 3.2.5 REST API using **Java 21** with a layered architectu
 
 ### Package Structure
 
+- `config/` - Spring configuration (`SecurityConfig`, `OpenApiConfig`)
 - `controller/` - REST endpoints (`@RestController`)
 - `service/` - Business logic with interface + implementation pattern
+- `security/` - JWT filter, entry point, `UserDetailsServiceImpl`, `JwtService`/`JwtServiceImpl`
 - `repository/` - Spring Data JPA repositories
-- `model/` - JPA entities (regular classes with getters/setters)
+- `model/` - JPA entities and enums (`User`, `Role`)
 - `dto/` - Java Records for data transfer
 - `exception/` - Custom exceptions and global handler
 
@@ -135,9 +150,18 @@ Bean Validation (Jakarta) is applied at the DTO level on Record components. The 
 
 ### REST API Design
 
-Base path: `/api/users`
+**Authentication (public — no token required):**
+- `POST /api/auth/register` - Register account, returns JWT (201 Created)
+- `POST /api/auth/login` - Login, returns JWT (200 OK)
 
-- POST `/api/users` - Returns 201 Created
-- GET `/api/users/{id}` - Returns 200 OK
+**User Management (protected — requires `Authorization: Bearer <token>`):**
+- `GET  /api/users` - List all users, paginated (200 OK)
+- `POST /api/users` - Create user (201 Created)
+- `GET  /api/users/{id}` - Get user by ID (200 OK)
+- `PUT  /api/users/{id}` - Update user (200 OK)
+- `DELETE /api/users/{id}` - Delete user (204 No Content)
 
-All error responses follow the `ErrorResponse` record structure with timestamp, status code, and message.
+**Other (public):**
+- `GET /api/greetings` - Returns greeting string (200 OK)
+
+All error responses follow the `ErrorResponse` record structure with `timestamp`, `status`, and `message`.
