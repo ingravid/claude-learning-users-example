@@ -2,17 +2,46 @@
 
 A Spring Boot REST application for managing users with CRUD operations, built with Java 21 and H2 in-memory database.
 
+## Table of Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Project Structure](#project-structure)
+- [Building the Project](#building-the-project)
+- [Running the Application](#running-the-application)
+- [Quick Start](#quick-start)
+- [API Summary](#api-summary)
+- [Interactive API Documentation](#interactive-api-documentation)
+- [API Endpoints](#api-endpoints)
+  - [Register](#register)
+  - [Login](#login)
+  - [Get All Users](#get-all-users)
+  - [Create User](#create-user)
+  - [Get User by ID](#get-user-by-id)
+  - [Update User](#update-user)
+  - [Delete User](#delete-user)
+  - [Get Greeting](#get-greeting)
+- [Error Response Format](#error-response-format)
+- [H2 Database Console](#h2-database-console)
+- [Testing](#testing)
+- [Example Usage with curl](#example-usage-with-curl)
+- [Design Decisions](#design-decisions)
+- [Project Roadmap & TODO List](#-project-roadmap--todo-list)
+
 ## Features
 
 - Complete CRUD operations (Create, Read, Update, Delete)
 - Get all users with pagination support
+- JWT authentication (HS256, 24-hour expiry) with register/login endpoints
+- Password hashing with BCrypt
 - Input validation with Bean Validation
 - Global exception handling with consistent error responses
 - Interactive OpenAPI/Swagger documentation
 - H2 in-memory database with console access
 - Java Records for immutable DTOs
 - RESTful API design
-- Comprehensive test coverage (38 tests)
+- Comprehensive test coverage (42 tests)
 
 ## Tech Stack
 
@@ -22,6 +51,7 @@ A Spring Boot REST application for managing users with CRUD operations, built wi
 - **Database**: H2 (in-memory)
 - **ORM**: Spring Data JPA
 - **Validation**: Jakarta Bean Validation
+- **Security**: Spring Security + JWT (jjwt 0.12.6)
 
 ## Prerequisites
 
@@ -33,10 +63,12 @@ A Spring Boot REST application for managing users with CRUD operations, built wi
 ```
 src/main/java/com/learning/usermanagement/
 ├── UserManagementApplication.java    # Main application class
+├── config/                            # Spring configuration (Security, OpenAPI)
 ├── controller/                        # REST API endpoints
 ├── service/                           # Business logic layer
+├── security/                          # JWT filter, entry point, UserDetailsService
 ├── repository/                        # Data access layer
-├── model/                             # JPA entities
+├── model/                             # JPA entities and enums
 ├── dto/                               # Data Transfer Objects (Records)
 └── exception/                         # Custom exceptions and handlers
 ```
@@ -79,13 +111,25 @@ cd prompting_to_project
 ./mvnw spring-boot:run
 
 # 4. Test the API (in a new terminal)
+
+# Register an account and receive a JWT token
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Alice", "email": "alice@example.com", "password": "secret123"}'
+# Response: {"token": "eyJhbGci..."}
+
+# Use the token to call protected endpoints
+TOKEN="<paste token here>"
+
 # Create a user
 curl -X POST http://localhost:8080/api/users \
   -H "Content-Type: application/json" \
-  -d '{"name": "Alice", "email": "alice@example.com"}'
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"name": "Bob", "email": "bob@example.com"}'
 
 # Get all users
-curl http://localhost:8080/api/users
+curl http://localhost:8080/api/users \
+  -H "Authorization: Bearer $TOKEN"
 
 # Access H2 console
 # Open browser: http://localhost:8080/h2-console
@@ -98,15 +142,19 @@ curl http://localhost:8080/api/users
 
 | Method | Endpoint | Description | Request Body | Success Response |
 |--------|----------|-------------|--------------|------------------|
+| POST | `/api/auth/register` | Register a new account | `{"name": "...", "email": "...", "password": "..."}` | 201 Created |
+| POST | `/api/auth/login` | Login and receive JWT | `{"email": "...", "password": "..."}` | 200 OK |
 | GET | `/api/users` | Get all users (paginated) | - | 200 OK |
-| POST | `/api/users` | Create a new user | `{"name": "...", "email": "..."}` | 201 Created |
+| POST | `/api/users` | Create a new user **(ADMIN)** | `{"name": "...", "email": "..."}` | 201 Created |
 | GET | `/api/users/{id}` | Get user by ID | - | 200 OK |
-| PUT | `/api/users/{id}` | Update user | `{"name": "...", "email": "..."}` | 200 OK |
-| DELETE | `/api/users/{id}` | Delete user | - | 204 No Content |
+| PUT | `/api/users/{id}` | Update user **(ADMIN)** | `{"name": "...", "email": "..."}` | 200 OK |
+| DELETE | `/api/users/{id}` | Delete user **(ADMIN)** | - | 204 No Content |
 | GET | `/api/greetings` | Get greeting message | - | 200 OK |
 
 **Common Error Responses:**
 - `400 Bad Request` - Validation failed
+- `401 Unauthorized` - Invalid credentials or missing token
+- `403 Forbidden` - Valid token but insufficient role (ADMIN required)
 - `404 Not Found` - User does not exist
 - `409 Conflict` - Email already exists
 - `500 Internal Server Error` - Server error
@@ -127,6 +175,61 @@ The Swagger UI provides:
 - Interactive testing without external tools like curl or Postman
 
 ## API Endpoints
+
+### Register
+
+**POST** `/api/auth/register`
+
+Creates a new account and returns a JWT token.
+
+**Request Body:**
+```json
+{
+  "name": "Alice",
+  "email": "alice@example.com",
+  "password": "secret123"
+}
+```
+
+**Success Response:** `201 Created`
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+**Error Responses:**
+- `400 Bad Request` - Validation failed (blank fields or invalid email)
+- `409 Conflict` - Email already in use
+
+---
+
+### Login
+
+**POST** `/api/auth/login`
+
+Authenticates a user and returns a JWT token.
+
+**Request Body:**
+```json
+{
+  "email": "alice@example.com",
+  "password": "secret123"
+}
+```
+
+**Success Response:** `200 OK`
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+**Error Responses:**
+- `400 Bad Request` - Validation failed
+- `401 Unauthorized` - Invalid email or password
+
+---
 
 ### Get All Users
 
@@ -167,7 +270,7 @@ Retrieves a paginated list of all users.
 
 ### Create User
 
-**POST** `/api/users`
+**POST** `/api/users` *(requires ADMIN role)*
 
 Creates a new user with the provided name and email.
 
@@ -190,6 +293,7 @@ Creates a new user with the provided name and email.
 
 **Error Responses:**
 - `400 Bad Request` - Validation failed (blank name/email or invalid email format)
+- `403 Forbidden` - Caller does not have ADMIN role
 - `409 Conflict` - Email already exists
 
 ### Get User by ID
@@ -212,7 +316,7 @@ Retrieves a user by their ID.
 
 ### Update User
 
-**PUT** `/api/users/{id}`
+**PUT** `/api/users/{id}` *(requires ADMIN role)*
 
 Updates an existing user's name and/or email.
 
@@ -235,6 +339,7 @@ Updates an existing user's name and/or email.
 
 **Error Responses:**
 - `400 Bad Request` - Validation failed (blank name/email or invalid email format)
+- `403 Forbidden` - Caller does not have ADMIN role
 - `404 Not Found` - User does not exist
 - `409 Conflict` - Email already exists (when changing to another user's email)
 
@@ -242,13 +347,14 @@ Updates an existing user's name and/or email.
 
 ### Delete User
 
-**DELETE** `/api/users/{id}`
+**DELETE** `/api/users/{id}` *(requires ADMIN role)*
 
 Deletes a user by their ID.
 
 **Success Response:** `204 No Content`
 
-**Error Response:**
+**Error Responses:**
+- `403 Forbidden` - Caller does not have ADMIN role
 - `404 Not Found` - User does not exist
 
 ### Get Greeting
@@ -289,12 +395,12 @@ The H2 console is available for database inspection during development.
 
 The project has comprehensive test coverage across all layers:
 
-- **38 total tests**
+- **42 total tests**
 - Unit tests (UserServiceTest) - 14 tests
-- Integration tests (UserControllerIntegrationTest) - 10 tests
+- Integration tests (UserControllerIntegrationTest) - 13 tests
 - Integration tests (GreetingControllerIntegrationTest) - 1 test
 - Repository tests (UserRepositoryTest) - 7 tests
-- Exception handler tests (GlobalExceptionHandlerTest) - 5 tests
+- Exception handler tests (GlobalExceptionHandlerTest) - 6 tests
 - Application context test - 1 test
 
 ```bash
@@ -314,57 +420,90 @@ The project has comprehensive test coverage across all layers:
 ## Example Usage with curl
 
 ```bash
-# Get all users (with pagination)
-curl "http://localhost:8080/api/users?page=0&size=10"
+# Register a new account
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Alice", "email": "alice@example.com", "password": "secret123"}'
 
-# Get all users (default pagination)
-curl http://localhost:8080/api/users
+# Login and receive a JWT token
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "alice@example.com", "password": "secret123"}'
 
-# Create a user
+# Login with wrong password (returns 401)
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "alice@example.com", "password": "wrong"}'
+
+# Store the token for subsequent requests
+TOKEN="eyJhbGciOiJIUzI1NiJ9..."   # paste token from register/login response
+
+# Get all users (with pagination) — requires auth
+curl "http://localhost:8080/api/users?page=0&size=10" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Get all users (default pagination) — requires auth
+curl http://localhost:8080/api/users \
+  -H "Authorization: Bearer $TOKEN"
+
+# Create a user — requires auth
 curl -X POST http://localhost:8080/api/users \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "Jane Doe", "email": "jane@example.com"}'
 
-# Get a user by ID
-curl http://localhost:8080/api/users/1
+# Get a user by ID — requires auth
+curl http://localhost:8080/api/users/1 \
+  -H "Authorization: Bearer $TOKEN"
 
-# Update a user
-curl -X PUT http://localhost:8080/api/users/1 \
+# Update a user — requires auth
+curl -X PUT http://localhost:8080/api/users/2 \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "Jane Updated", "email": "jane.updated@example.com"}'
 
-# Update user name only (keep same email)
-curl -X PUT http://localhost:8080/api/users/1 \
+# Update user name only (keep same email) — requires auth
+curl -X PUT http://localhost:8080/api/users/2 \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "Jane Smith", "email": "jane@example.com"}'
 
-# Delete a user
-curl -X DELETE http://localhost:8080/api/users/1
+# Delete a user — requires auth
+curl -X DELETE http://localhost:8080/api/users/2 \
+  -H "Authorization: Bearer $TOKEN"
 
 # Error examples:
+
+# Access protected endpoint without token (returns 401)
+curl http://localhost:8080/api/users
 
 # Create a user with validation error
 curl -X POST http://localhost:8080/api/users \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "", "email": "invalid"}'
 
 # Create a user with duplicate email
 curl -X POST http://localhost:8080/api/users \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "John Smith", "email": "jane@example.com"}'
 
 # Try to get non-existent user
-curl http://localhost:8080/api/users/999
+curl http://localhost:8080/api/users/999 \
+  -H "Authorization: Bearer $TOKEN"
 
 # Try to update non-existent user
 curl -X PUT http://localhost:8080/api/users/999 \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "Ghost", "email": "ghost@example.com"}'
 
 # Try to delete non-existent user
-curl -X DELETE http://localhost:8080/api/users/999
+curl -X DELETE http://localhost:8080/api/users/999 \
+  -H "Authorization: Bearer $TOKEN"
 
-# Get greeting message
+# Get greeting message (public — no auth needed)
 curl http://localhost:8080/api/greetings
 ```
 
@@ -408,21 +547,21 @@ Currently comprehensive tests are implemented:
 
 ---
 
-### ***** TODO 2. Security (Currently None)
-
-The API is completely open. Consider:
+### ***** IN-PROGRESS 2. Security
 
 **Spring Security with JWT:**
-- Bearer token authentication
-- User roles (ADMIN, USER)
-- Endpoint authorization (e.g., only admins can create users)
-- Password hashing (BCrypt)
-- Add User.password field with proper storage
+- ✅ Bearer token generation (HS256, jjwt 0.12.6)
+- ✅ Password hashing (BCrypt)
+- ✅ User.password field added to entity
+- ✅ JWT validation on incoming requests (JwtAuthenticationFilter)
+- ✅ User roles (ADMIN, USER) — Role enum, stored in DB
+- ✅ Endpoint protection: all /api/users/** require valid JWT
 
 **Security Configuration:**
-- POST /api/auth/login - Generate JWT
-- POST /api/auth/register - Create account
-- Protect /api/users/** with @PreAuthorize
+- ✅ POST /api/auth/login - Generate JWT
+- ✅ POST /api/auth/register - Create account
+- ✅ /api/users/** protected by JwtAuthenticationFilter
+- ✅ Role-based authorization with @PreAuthorize (only ADMIN can create/delete users)
 
 ---
 

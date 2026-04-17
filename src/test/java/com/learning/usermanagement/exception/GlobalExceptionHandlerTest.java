@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -75,6 +76,22 @@ class GlobalExceptionHandlerTest {
         assertNotNull(response.getBody());
         assertEquals(400, response.getBody().status());
         assertEquals("Email must be valid", response.getBody().message());
+        assertNotNull(response.getBody().timestamp());
+    }
+
+    @Test
+    void testHandleAccessDeniedException() {
+        // given
+        AccessDeniedException exception = new AccessDeniedException("Access is denied");
+
+        // when
+        ResponseEntity<ErrorResponse> response = exceptionHandler.handleAccessDeniedException(exception);
+
+        // then
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(403, response.getBody().status());
+        assertEquals("Access denied: insufficient permissions", response.getBody().message());
         assertNotNull(response.getBody().timestamp());
     }
 

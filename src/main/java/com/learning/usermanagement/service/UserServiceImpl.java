@@ -4,6 +4,7 @@ import com.learning.usermanagement.dto.UserRequestDto;
 import com.learning.usermanagement.dto.UserResponseDto;
 import com.learning.usermanagement.exception.DuplicateEmailException;
 import com.learning.usermanagement.exception.UserNotFoundException;
+import com.learning.usermanagement.model.Role;
 import com.learning.usermanagement.model.User;
 import com.learning.usermanagement.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -29,7 +30,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // Create and save user entity
-        User user = new User(null, request.name(), request.email());
+        User user = new User(null, request.name(), request.email(), "", Role.USER);
         User savedUser = userRepository.save(user);
 
         // Convert to response DTO
