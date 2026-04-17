@@ -1,5 +1,6 @@
 package com.learning.usermanagement.service;
 
+import com.learning.usermanagement.dto.CreateUserRequestDto;
 import com.learning.usermanagement.dto.UserRequestDto;
 import com.learning.usermanagement.dto.UserResponseDto;
 import com.learning.usermanagement.exception.DuplicateEmailException;
@@ -9,6 +10,7 @@ import com.learning.usermanagement.model.User;
 import com.learning.usermanagement.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,21 +18,23 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
     @Override
-    public UserResponseDto createUser(UserRequestDto request) {
+    public UserResponseDto createUser(CreateUserRequestDto request) {
         // Check if email already exists
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateEmailException("Email already exists: " + request.email());
         }
 
-        // Create and save user entity
-        User user = new User(null, request.name(), request.email(), "", Role.USER);
+        // Create and save user entity with hashed password
+        User user = new User(null, request.name(), request.email(), passwordEncoder.encode(request.password()), Role.USER);
         User savedUser = userRepository.save(user);
 
         // Convert to response DTO

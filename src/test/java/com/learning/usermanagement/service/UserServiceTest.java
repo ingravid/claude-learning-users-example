@@ -1,5 +1,6 @@
 package com.learning.usermanagement.service;
 
+import com.learning.usermanagement.dto.CreateUserRequestDto;
 import com.learning.usermanagement.dto.UserRequestDto;
 import com.learning.usermanagement.dto.UserResponseDto;
 import com.learning.usermanagement.exception.DuplicateEmailException;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,6 +24,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,13 +33,17 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private UserServiceImpl userService;
 
     @Test
     void testCreateUser_Success() {
         // given
-        UserRequestDto request = new UserRequestDto("John Doe", "john@example.com");
+        CreateUserRequestDto request = new CreateUserRequestDto("John Doe", "john@example.com", "secret123");
+        when(passwordEncoder.encode("secret123")).thenReturn("hashed_secret123");
         User savedUser = new User(1L, "John Doe", "john@example.com");
 
         when(userRepository.existsByEmail("john@example.com")).thenReturn(false);
@@ -58,7 +65,7 @@ class UserServiceTest {
     @Test
     void testCreateUser_DuplicateEmail_ThrowsException() {
         // given
-        UserRequestDto request = new UserRequestDto("John Doe", "duplicate@example.com");
+        CreateUserRequestDto request = new CreateUserRequestDto("John Doe", "duplicate@example.com", "secret123");
         when(userRepository.existsByEmail("duplicate@example.com")).thenReturn(true);
 
         // when & then
@@ -105,9 +112,10 @@ class UserServiceTest {
     @Test
     void testCreateUser_SavesCorrectUserData() {
         // given
-        UserRequestDto request = new UserRequestDto("Alice Smith", "alice@example.com");
+        CreateUserRequestDto request = new CreateUserRequestDto("Alice Smith", "alice@example.com", "secret123");
         User savedUser = new User(2L, "Alice Smith", "alice@example.com");
 
+        when(passwordEncoder.encode("secret123")).thenReturn("hashed_secret123");
         when(userRepository.existsByEmail("alice@example.com")).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User user = invocation.getArgument(0);
@@ -129,9 +137,10 @@ class UserServiceTest {
     @Test
     void testCreateUser_CallsRepositoryMethods() {
         // given
-        UserRequestDto request = new UserRequestDto("Bob Brown", "bob@example.com");
+        CreateUserRequestDto request = new CreateUserRequestDto("Bob Brown", "bob@example.com", "secret123");
         User savedUser = new User(3L, "Bob Brown", "bob@example.com");
 
+        when(passwordEncoder.encode("secret123")).thenReturn("hashed_secret123");
         when(userRepository.existsByEmail("bob@example.com")).thenReturn(false);
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 

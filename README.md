@@ -112,30 +112,36 @@ cd prompting_to_project
 
 # 4. Test the API (in a new terminal)
 
-# Register an account and receive a JWT token
+# Register an account (all users start with role USER)
 curl -X POST http://localhost:8080/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"name": "Alice", "email": "alice@example.com", "password": "secret123"}'
 # Response: {"token": "eyJhbGci..."}
 
-# Use the token to call protected endpoints
+# 5. Promote Alice to ADMIN via H2 console (required for write endpoints)
+# Open: http://localhost:8080/h2-console
+# JDBC URL: jdbc:h2:mem:userdb  |  Username: sa  |  Password: (empty)
+# Run:  UPDATE USERS SET ROLE = 'ADMIN' WHERE EMAIL = 'alice@example.com';
+
+# 6. Log in again to get a fresh token
+# Note: the role is re-loaded from the DB on every request, so the existing token
+# already works after the UPDATE — but logging in again is the cleaner approach.
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "alice@example.com", "password": "secret123"}'
+
+# Use the ADMIN token to call protected endpoints
 TOKEN="<paste token here>"
 
-# Create a user
+# Create a user (ADMIN only) — password is BCrypt-hashed and stored; Bob can now log in
 curl -X POST http://localhost:8080/api/users \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
-  -d '{"name": "Bob", "email": "bob@example.com"}'
+  -d '{"name": "Bob", "email": "bob@example.com", "password": "bobpass123"}'
 
-# Get all users
+# Get all users (any authenticated user)
 curl http://localhost:8080/api/users \
   -H "Authorization: Bearer $TOKEN"
-
-# Access H2 console
-# Open browser: http://localhost:8080/h2-console
-# JDBC URL: jdbc:h2:mem:userdb
-# Username: sa
-# Password: (leave empty)
 ```
 
 ## API Summary
@@ -272,13 +278,14 @@ Retrieves a paginated list of all users.
 
 **POST** `/api/users` *(requires ADMIN role)*
 
-Creates a new user with the provided name and email.
+Creates a new user with the provided name, email, and password.
 
 **Request Body:**
 ```json
 {
   "name": "John Doe",
-  "email": "john@example.com"
+  "email": "john@example.com",
+  "password": "secret123"
 }
 ```
 
@@ -435,40 +442,45 @@ curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "alice@example.com", "password": "wrong"}'
 
-# Store the token for subsequent requests
-TOKEN="eyJhbGciOiJIUzI1NiJ9..."   # paste token from register/login response
+# Promote to ADMIN via H2 console before calling write endpoints:
+#   Open http://localhost:8080/h2-console (JDBC URL: jdbc:h2:mem:userdb, user: sa, no password)
+#   Run: UPDATE USERS SET ROLE = 'ADMIN' WHERE EMAIL = 'alice@example.com';
+#   Then log in again to get a token that carries the ADMIN role.
 
-# Get all users (with pagination) — requires auth
+# Store the ADMIN token for subsequent requests
+TOKEN="eyJhbGciOiJIUzI1NiJ9..."   # paste token from login response after ADMIN promotion
+
+# Get all users (with pagination) — any authenticated user
 curl "http://localhost:8080/api/users?page=0&size=10" \
   -H "Authorization: Bearer $TOKEN"
 
-# Get all users (default pagination) — requires auth
+# Get all users (default pagination) — any authenticated user
 curl http://localhost:8080/api/users \
   -H "Authorization: Bearer $TOKEN"
 
-# Create a user — requires auth
+# Create a user — ADMIN only (password is BCrypt-hashed; Jane can now log in)
 curl -X POST http://localhost:8080/api/users \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
-  -d '{"name": "Jane Doe", "email": "jane@example.com"}'
+  -d '{"name": "Jane Doe", "email": "jane@example.com", "password": "janepass123"}'
 
-# Get a user by ID — requires auth
+# Get a user by ID — any authenticated user
 curl http://localhost:8080/api/users/1 \
   -H "Authorization: Bearer $TOKEN"
 
-# Update a user — requires auth
+# Update a user — ADMIN only
 curl -X PUT http://localhost:8080/api/users/2 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "Jane Updated", "email": "jane.updated@example.com"}'
 
-# Update user name only (keep same email) — requires auth
+# Update user name only (keep same email) — ADMIN only
 curl -X PUT http://localhost:8080/api/users/2 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "Jane Smith", "email": "jane@example.com"}'
 
-# Delete a user — requires auth
+# Delete a user — ADMIN only
 curl -X DELETE http://localhost:8080/api/users/2 \
   -H "Authorization: Bearer $TOKEN"
 

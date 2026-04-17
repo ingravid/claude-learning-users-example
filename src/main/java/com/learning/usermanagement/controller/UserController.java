@@ -1,5 +1,6 @@
 package com.learning.usermanagement.controller;
 
+import com.learning.usermanagement.dto.CreateUserRequestDto;
 import com.learning.usermanagement.dto.UserRequestDto;
 import com.learning.usermanagement.dto.UserResponseDto;
 import com.learning.usermanagement.service.UserService;
@@ -57,7 +58,7 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
-    public UserResponseDto createUser(@Valid @RequestBody UserRequestDto request) {
+    public UserResponseDto createUser(@Valid @RequestBody CreateUserRequestDto request) {
         return userService.createUser(request);
     }
 

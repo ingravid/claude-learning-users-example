@@ -38,7 +38,8 @@ class UserControllerIntegrationTest {
         String requestBody = """
             {
                 "name": "John Doe",
-                "email": "john@example.com"
+                "email": "john@example.com",
+                "password": "secret123"
             }
             """;
 
@@ -56,7 +57,8 @@ class UserControllerIntegrationTest {
         String requestBody = """
             {
                 "name": "John Doe",
-                "email": "invalid-email"
+                "email": "invalid-email",
+                "password": "secret123"
             }
             """;
 
@@ -74,7 +76,8 @@ class UserControllerIntegrationTest {
         String requestBody = """
             {
                 "name": "",
-                "email": "test@example.com"
+                "email": "test@example.com",
+                "password": "secret123"
             }
             """;
 
@@ -91,7 +94,8 @@ class UserControllerIntegrationTest {
         String requestBody = """
             {
                 "name": "John Doe",
-                "email": ""
+                "email": "",
+                "password": "secret123"
             }
             """;
 
@@ -110,7 +114,8 @@ class UserControllerIntegrationTest {
         String requestBody = """
             {
                 "name": "New User",
-                "email": "duplicate@example.com"
+                "email": "duplicate@example.com",
+                "password": "secret123"
             }
             """;
 
@@ -147,7 +152,8 @@ class UserControllerIntegrationTest {
         String requestBody = """
             {
                 "name": "Alice Smith",
-                "email": "alice@example.com"
+                "email": "alice@example.com",
+                "password": "secret123"
             }
             """;
 
@@ -200,7 +206,8 @@ class UserControllerIntegrationTest {
         String requestBody = """
             {
                 "name": "John Doe",
-                "email": "john@example.com"
+                "email": "john@example.com",
+                "password": "secret123"
             }
             """;
 
