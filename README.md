@@ -145,15 +145,16 @@ curl http://localhost:8080/api/users \
 | POST | `/api/auth/register` | Register a new account | `{"name": "...", "email": "...", "password": "..."}` | 201 Created |
 | POST | `/api/auth/login` | Login and receive JWT | `{"email": "...", "password": "..."}` | 200 OK |
 | GET | `/api/users` | Get all users (paginated) | - | 200 OK |
-| POST | `/api/users` | Create a new user | `{"name": "...", "email": "..."}` | 201 Created |
+| POST | `/api/users` | Create a new user **(ADMIN)** | `{"name": "...", "email": "..."}` | 201 Created |
 | GET | `/api/users/{id}` | Get user by ID | - | 200 OK |
-| PUT | `/api/users/{id}` | Update user | `{"name": "...", "email": "..."}` | 200 OK |
-| DELETE | `/api/users/{id}` | Delete user | - | 204 No Content |
+| PUT | `/api/users/{id}` | Update user **(ADMIN)** | `{"name": "...", "email": "..."}` | 200 OK |
+| DELETE | `/api/users/{id}` | Delete user **(ADMIN)** | - | 204 No Content |
 | GET | `/api/greetings` | Get greeting message | - | 200 OK |
 
 **Common Error Responses:**
 - `400 Bad Request` - Validation failed
-- `401 Unauthorized` - Invalid credentials
+- `401 Unauthorized` - Invalid credentials or missing token
+- `403 Forbidden` - Valid token but insufficient role (ADMIN required)
 - `404 Not Found` - User does not exist
 - `409 Conflict` - Email already exists
 - `500 Internal Server Error` - Server error
@@ -269,7 +270,7 @@ Retrieves a paginated list of all users.
 
 ### Create User
 
-**POST** `/api/users`
+**POST** `/api/users` *(requires ADMIN role)*
 
 Creates a new user with the provided name and email.
 
@@ -292,6 +293,7 @@ Creates a new user with the provided name and email.
 
 **Error Responses:**
 - `400 Bad Request` - Validation failed (blank name/email or invalid email format)
+- `403 Forbidden` - Caller does not have ADMIN role
 - `409 Conflict` - Email already exists
 
 ### Get User by ID
@@ -314,7 +316,7 @@ Retrieves a user by their ID.
 
 ### Update User
 
-**PUT** `/api/users/{id}`
+**PUT** `/api/users/{id}` *(requires ADMIN role)*
 
 Updates an existing user's name and/or email.
 
@@ -337,6 +339,7 @@ Updates an existing user's name and/or email.
 
 **Error Responses:**
 - `400 Bad Request` - Validation failed (blank name/email or invalid email format)
+- `403 Forbidden` - Caller does not have ADMIN role
 - `404 Not Found` - User does not exist
 - `409 Conflict` - Email already exists (when changing to another user's email)
 
@@ -344,13 +347,14 @@ Updates an existing user's name and/or email.
 
 ### Delete User
 
-**DELETE** `/api/users/{id}`
+**DELETE** `/api/users/{id}` *(requires ADMIN role)*
 
 Deletes a user by their ID.
 
 **Success Response:** `204 No Content`
 
-**Error Response:**
+**Error Responses:**
+- `403 Forbidden` - Caller does not have ADMIN role
 - `404 Not Found` - User does not exist
 
 ### Get Greeting
@@ -557,7 +561,7 @@ Currently comprehensive tests are implemented:
 - ✅ POST /api/auth/login - Generate JWT
 - ✅ POST /api/auth/register - Create account
 - ✅ /api/users/** protected by JwtAuthenticationFilter
-- [ ] Role-based authorization with @PreAuthorize (e.g., only ADMIN can create/delete users)
+- ✅ Role-based authorization with @PreAuthorize (only ADMIN can create/delete users)
 
 ---
 
